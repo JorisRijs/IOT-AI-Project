@@ -1,9 +1,15 @@
 import os
 import PIL
 import PIL.Image
+import cv2
+import time
 import tensorflow as tf
 import pathlib
+import numpy as np
 from tensorflow.keras import layers
+from keras_preprocessing import image
+
+
 
 DATA_DIR = os.path.join(os.path.curdir, "Output")
 data_dir = pathlib.Path(DATA_DIR)
@@ -102,3 +108,99 @@ else:
 
 model.summary()
 
+def capture_frame():
+    # cv2.CAP_DSHOW sets the capture device
+    video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    print("printing frame properties")
+    print(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    print(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    check, frame = video.read()
+    print(type(frame))
+    video.release()
+    return video
+
+def feed():
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_height)
+    print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    i = 0
+    while (True):
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+
+        # Our operations on the frame come here
+        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Display the resulting frame
+        #cv2.imshow('frame', gray)
+        cv2.imshow('Webcam', frame)
+
+        #print(frame)
+
+        #geef aan per hoeveel frames het model orientatie moet checken
+        if i == 5:
+            print('frame')
+            np_image_data = np.asarray(frame)
+            x = np.expand_dims(frame, axis=0)
+            images = np.vstack([x])
+            classes = model.predict(images, batch_size=10)
+            print(classes)
+            i = 0
+            #print(AImodelresult(frame)) #links-11 rechts-11 etc.
+
+        #framecapture()
+        i += 1
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+feed()
+
+# counter = 0
+# running = True
+# stop = False
+# cap =cv2.VideoCapture(0)
+# while running and not stop:
+#     # Get a frame from the webcam
+#     frame = capture_frame()
+#     # Display the resulting frame
+#     cv2.imshow('Webcam', frame)
+
+#     if counter == 4:
+#         print(frame)
+#         np_image_data = np.asarray(frame)
+#         x = np.expand_dims(frame, axis=0)
+#         images = np.vstack([x])
+#         classes = model.predict(images, batch_size=2)
+#         counter = 0
+#     else:
+#         continue
+
+#     counter += 1
+
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+
+# # When everything done, release the capture
+# cv2.destroyAllWindows()
+
+# test_path = os.path.join(os.path.curdir, 'test_data')
+
+# for filename in os.listdir(test_path):
+#     if filename.endswith('.jpg'):
+#         file = os.path.join(test_path, filename)
+#         print(os.path.join(test_path, filename))
+#         img = image.load_img(file, target_size=(img_height, img_width))
+#         x = image.img_to_array(img)
+#         x = np.expand_dims(x, axis=0)
+#         images = np.vstack([x])
+#         classes = model.predict(images, batch_size=2)
+#         print(classes)
+#     else:
+#         continue
